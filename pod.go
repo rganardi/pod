@@ -99,7 +99,7 @@ func list() {
 	die(0)
 }
 
-func podinfo(filename string) {
+func podInfo(filename string) {
 	xmlFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -117,16 +117,16 @@ func podinfo(filename string) {
 	err = d.Decode(&q)
 	c := q.Podcast
 
-	fmt.Printf("title\t%v\n", c.Title)
+	fmt.Printf("title\t\t%v\n", c.Title)
 
 	for _, feedurl := range c.NewFeedUrl {
 		if feedurl.Rel == "self" {
-			fmt.Printf("url\t%v", feedurl.Link)
+			fmt.Printf("url\t\t%v\n", feedurl.Link)
 		}
 	}
-	fmt.Printf(`
-desc	%v
-`, c.Desc)
+	fmt.Printf("desc\t\t%v\n", c.Desc)
+	lastEpisode := c.EpisodeList[0]
+	fmt.Printf("last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
 	die(0)
 	/*
 	for _, episode := range c.EpisodeList {
@@ -288,7 +288,7 @@ func main() {
 			die(1)
 		}
 		inputFile := os.Args[2]
-		podinfo(inputFile)
+		podInfo(inputFile)
 	case "fetch":
 		if len(os.Args) < 3 {
 			fmt.Println("not enough arguments!\n")
