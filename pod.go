@@ -81,6 +81,7 @@ func fetch(url, fileName string) {
 	defer response.Body.Close()
 
 	n, err := io.Copy(output, response.Body)
+	output.Sync()
 
 	fmt.Printf("downloaded %s\t %v bytes\n", url, n)
 	return
@@ -142,8 +143,6 @@ func fetchPodcast(podid string) {
 		die(1)
 	}
 
-	defer xmlFile.Close()
-
 	file, _ := ioutil.ReadAll(xmlFile)
 
 	q := Query{}
@@ -157,6 +156,17 @@ func fetchPodcast(podid string) {
 			url := i.Link
 			fetch(url, "tmp")
 		}
+	}
+
+	err = xmlFile.Sync()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		die(1)
+	}
+	err = xmlFile.Close()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		die(1)
 	}
 
 
