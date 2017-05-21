@@ -55,6 +55,7 @@ func usage(status int) {
 available commands are
 	list			list all available podcast
 	info PODCAST		print info about PODCAST
+	refresh PODCAST		refresh the PODCAST
 	fetch PODCAST		get the latest episode of PODCAST
 	pull			get the latest episode of all podcasts
 	clean PODCAST		remove media files for PODCAST
@@ -309,14 +310,20 @@ func main() {
 		die(0)
 	case "pull":
 		pull()
-	case "help":
-		usage(0)
 	case "clean":
 		if len(os.Args) < 3 {
 			fmt.Println("not enough arguments!\n")
 			die(1)
 		}
 		clean(os.Args[2])
+	case "refresh":
+		if len(os.Args) < 3 {
+			fmt.Println("not enough arguments!\n")
+			die(1)
+		}
+		fetchPodcast(os.Args[2])
+	case "help":
+		usage(0)
 	default:
 		usage(1)
 	}
