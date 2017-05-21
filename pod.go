@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"bytes"
 	"encoding/xml"
 	"os"
 	"io/ioutil"
@@ -15,6 +16,7 @@ type Query struct {
 type Channel struct {
 	Title	string `xml:"title"`
 	Desc	string `xml:"description"`
+	NewFeedUrl	[]FeedUrl	`xml:"link"`
 	EpisodeList	[]Episode	`xml:"item"`
 }
 
@@ -25,18 +27,15 @@ type Episode struct {
 	Enclosure	EpisodeUrl `xml:"enclosure"`
 }
 
+type FeedUrl struct {
+	Rel	string `xml:"rel,attr"`
+	Link	string `xml:"href,attr"`
+}
+
 type EpisodeUrl struct {
 	Link	string `xml:"url,attr"`
 }
-/*
-func (c Channel) String() string {
-	return fmt.Sprintf("%s - %d hi there", c.Title, c.Desc)
-}
 
-func (e Episode) String() string {
-	return fmt.Sprintf("%s - %s", e.Title, e.Desc)
-}
-*/
 
 func main() {
 	inputFile := os.Args[1]
@@ -53,10 +52,20 @@ func main() {
 	file, _ := ioutil.ReadAll(xmlFile)
 
 	q := Query{}
-	err = xml.Unmarshal(file, &q)
-
+	//q.
+	//err = xml.Unmarshal(file, &q)
+	d := xml.NewDecoder(bytes.NewReader(file))
+	err = d.Decode(&q)
 	c := q.Podcast
-	fmt.Printf("%s - %s\n", c.Title, c.Desc)
+
+	fmt.Printf("%v\t%v\n", c.Title, c.Desc)
+
+	for _, feedurl := range c.NewFeedUrl {
+		if feedurl.Rel == "self" {
+			fmt.Printf("%v\n", feedurl.Link)
+		}
+	}
+
 	for _, episode := range c.EpisodeList {
 		fmt.Printf("\t%s\n", episode)
 	}
