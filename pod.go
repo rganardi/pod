@@ -84,7 +84,7 @@ func fetch(url, fileName string) {
 	n, err := io.Copy(output, response.Body)
 	output.Sync()
 
-	fmt.Printf("downloaded %s\t %v bytes\n", url, n)
+	fmt.Printf("downloaded  %s\t %v bytes\n", url, n)
 	return
 }
 
