@@ -65,7 +65,7 @@ available commands are
 }
 
 func fetch(url, fileName string) {
-	fmt.Printf("downloading %s\r", url)
+	fmt.Printf("fetching %s\r", url)
 
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -84,7 +84,7 @@ func fetch(url, fileName string) {
 	n, err := io.Copy(output, response.Body)
 	output.Sync()
 
-	fmt.Printf("downloaded  %s\t %v bytes\n", url, n)
+	fmt.Printf("downloaded %s\t %v bytes\n", url, n)
 	return
 }
 
