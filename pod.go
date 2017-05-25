@@ -1,42 +1,41 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/xml"
-	"os"
-	"path"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 )
 
 type Query struct {
-	Podcast 	Channel		`xml:"channel"`
+	Podcast Channel `xml:"channel"`
 }
 
-
 type Channel struct {
-	Title	string `xml:"title"`
-	Desc	string `xml:"description"`
-	NewFeedUrl	[]FeedUrl	`xml:"link"`
-	EpisodeList	[]Episode	`xml:"item"`
+	Title       string    `xml:"title"`
+	Desc        string    `xml:"description"`
+	NewFeedUrl  []FeedUrl `xml:"link"`
+	EpisodeList []Episode `xml:"item"`
 }
 
 type Episode struct {
-	Title	string `xml:"title"`
-	Desc	string `xml:"description"`
-	PubDate	string `xml:"pubDate"`
-	Enclosure	EpisodeUrl `xml:"enclosure"`
+	Title     string     `xml:"title"`
+	Desc      string     `xml:"description"`
+	PubDate   string     `xml:"pubDate"`
+	Enclosure EpisodeUrl `xml:"enclosure"`
 }
 
 type FeedUrl struct {
-	Rel	string `xml:"rel,attr"`
-	Link	string `xml:"href,attr"`
+	Rel  string `xml:"rel,attr"`
+	Link string `xml:"href,attr"`
 }
 
 type EpisodeUrl struct {
-	Link	string `xml:"url,attr"`
+	Link string `xml:"url,attr"`
 }
 
 func die(status int) {
@@ -91,10 +90,10 @@ func fetch(url, fileName string) {
 func list() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Println("%v\n", err)
+		fmt.Println(err)
 		die(1)
 	}
-	
+
 	for _, file := range files {
 		fmt.Printf("%v\n", file.Name())
 	}
@@ -131,9 +130,9 @@ func podInfo(filename string) {
 	fmt.Printf("last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
 	die(0)
 	/*
-	for _, episode := range c.EpisodeList {
-		fmt.Printf("\t%s\n", episode)
-	}
+		for _, episode := range c.EpisodeList {
+			fmt.Printf("\t%s\n", episode)
+		}
 	*/
 }
 
@@ -152,7 +151,7 @@ func fetchPodcast(podid string) {
 	err = d.Decode(&q)
 	c := q.Podcast
 
-	for _,i := range c.NewFeedUrl {
+	for _, i := range c.NewFeedUrl {
 		if i.Rel == "self" {
 			url := i.Link
 			fetch(url, "tmp")
@@ -170,13 +169,12 @@ func fetchPodcast(podid string) {
 		die(1)
 	}
 
-
 	err = os.Remove(podid)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		die(1)
 	}
-	
+
 	err = os.Rename("tmp", podid)
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -185,9 +183,9 @@ func fetchPodcast(podid string) {
 
 	return
 	/*
-	for _, episode := range c.EpisodeList {
-		fmt.Printf("\t%s\n", episode)
-	}
+		for _, episode := range c.EpisodeList {
+			fmt.Printf("\t%s\n", episode)
+		}
 	*/
 }
 
@@ -215,19 +213,19 @@ func fetchEpisode(podid string) {
 	fetch(url, filename)
 	return
 	/*
-	for _, episode := range c.EpisodeList {
-		fmt.Printf("\t%s\n", episode)
-	}
+		for _, episode := range c.EpisodeList {
+			fmt.Printf("\t%s\n", episode)
+		}
 	*/
 }
 
 func pull() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Println("%v\n", err)
+		fmt.Println(err)
 		die(1)
 	}
-	
+
 	for _, file := range files {
 		check(file.Name())
 		fetchPodcast("rss/" + file.Name())
@@ -243,7 +241,7 @@ func clean(mediaid string) {
 	}
 	err := os.Remove(mediaid)
 	if err != nil {
-		fmt.Println("%v\n", err)
+		fmt.Println(err)
 		die(1)
 	}
 	fmt.Printf("cleaning done\n")
@@ -253,7 +251,7 @@ func clean(mediaid string) {
 func cleanall() {
 	err := os.RemoveAll("media/")
 	if err != nil {
-		fmt.Println("%v\n", err)
+		fmt.Println(err)
 		die(1)
 	}
 	fmt.Printf("cleaning done\n")
@@ -266,43 +264,42 @@ func check(podid string) {
 		fmt.Printf("media doesn't exist, creating dir\n")
 		err = os.Mkdir("media", 0755)
 		if err != nil {
-			fmt.Println("%v\n", err)
+			fmt.Println(err)
 			die(1)
 		}
 	}
 	_, err = os.Stat("media/" + path.Base(podid))
 	if os.IsNotExist(err) {
 		fmt.Printf("media/%v doesn't exist, creating dir\n", path.Base(podid))
-		err = os.Mkdir("media/" + path.Base(podid), 0755)
+		err = os.Mkdir("media/"+path.Base(podid), 0755)
 		if err != nil {
-			fmt.Println("%v\n", err)
+			fmt.Println(err)
 			die(1)
 		}
 	}
 	return
 }
 
-
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Println("not enough arguments!\n")
+		fmt.Println("not enough arguments!")
 		usage(1)
 	}
-	
+
 	switch os.Args[1] {
 	case "list":
 		list()
 	case "info":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!\n")
+			fmt.Println("not enough arguments!")
 			die(1)
 		}
 		inputFile := os.Args[2]
 		podInfo(inputFile)
 	case "fetch":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!\n")
+			fmt.Println("not enough arguments!")
 			die(1)
 		}
 		fetchPodcast(os.Args[2])
@@ -312,13 +309,13 @@ func main() {
 		pull()
 	case "clean":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!\n")
+			fmt.Println("not enough arguments!")
 			die(1)
 		}
 		clean(os.Args[2])
 	case "refresh":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!\n")
+			fmt.Println("not enough arguments!")
 			die(1)
 		}
 		fetchPodcast(os.Args[2])
