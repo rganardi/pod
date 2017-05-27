@@ -151,11 +151,17 @@ func fetchPodcast(podid string) {
 	err = d.Decode(&q)
 	c := q.Podcast
 
+	var url string
 	for _, i := range c.NewFeedUrl {
 		if i.Rel == "self" {
-			url := i.Link
+			url = i.Link
 			fetch(url, "tmp")
+			break
 		}
+	}
+	if url == "" {
+		fmt.Printf("no update link found\n")
+		die(1)
 	}
 
 	err = xmlFile.Sync()
