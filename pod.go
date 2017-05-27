@@ -136,7 +136,7 @@ func podInfo(filename string) {
 	*/
 }
 
-func fetchPodcast(podid string) {
+func fetchPodcast(podid string) error {
 	xmlFile, err := os.Open(podid)
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -160,8 +160,8 @@ func fetchPodcast(podid string) {
 		}
 	}
 	if url == "" {
-		fmt.Printf("no update link found\n")
-		die(1)
+		fmt.Fprintf(os.Stderr, "%s no update link found\n", podid)
+		return fmt.Errorf("%s no update link found\n", podid)
 	}
 
 	err = xmlFile.Sync()
@@ -187,7 +187,7 @@ func fetchPodcast(podid string) {
 		die(1)
 	}
 
-	return
+	return nil
 	/*
 		for _, episode := range c.EpisodeList {
 			fmt.Printf("\t%s\n", episode)
@@ -241,7 +241,10 @@ func pull() {
 
 	for _, file := range files {
 		check(file.Name())
-		fetchPodcast("rss/" + file.Name())
+		err = fetchPodcast("rss/" + file.Name())
+		if err != nil {
+			continue
+		}
 		fmt.Printf("fetching %v\n", file.Name())
 		fetchEpisode("rss/" + file.Name())
 	}
@@ -315,8 +318,12 @@ func main() {
 			fmt.Println("not enough arguments!")
 			die(1)
 		}
-		fetchPodcast(os.Args[2])
-		fetchEpisode(os.Args[2])
+		for _, podid := range os.Args[2:] {
+			err := fetchPodcast(podid)
+			if err == nil {
+				fetchEpisode(podid)
+			}
+		}
 		die(0)
 	case "pull":
 		pull()
@@ -331,7 +338,9 @@ func main() {
 			fmt.Println("not enough arguments!")
 			die(1)
 		}
-		fetchPodcast(os.Args[2])
+		for _, podid := range os.Args[2:] {
+			fetchPodcast(podid)
+		}
 	case "help":
 		usage(0)
 	default:
