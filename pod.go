@@ -216,6 +216,13 @@ func fetchEpisode(podid string) {
 	url := c.EpisodeList[0].Enclosure.Link
 	podname := path.Base(podid)
 	filename := "media/" + podname + "/" + path.Base(url)
+
+	//check if the file to download already exists
+	_, err = os.Stat(filename)
+	if err == nil {
+		fmt.Fprintf(os.Stdout, "media already downloaded\n")
+		return
+	}
 	fetch(url, filename)
 	return
 	/*
