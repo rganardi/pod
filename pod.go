@@ -68,14 +68,14 @@ func fetch(url, fileName string) {
 
 	output, err := os.Create(fileName)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
 	defer output.Close()
 
 	response, err := http.Get(url)
 	if err != nil {
-		fmt.Println("error while downloading", url, "\n", err)
+		fmt.Fprintf(os.Stderr, "error while downloading%v\n%v\n", url, err)
 		die(1)
 	}
 	defer response.Body.Close()
@@ -90,7 +90,7 @@ func fetch(url, fileName string) {
 func list() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
 
@@ -235,7 +235,7 @@ func fetchEpisode(podid string) {
 func pull() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
 
@@ -257,7 +257,7 @@ func clean(mediaid string) {
 	}
 	err := os.Remove(mediaid)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
 	fmt.Printf("cleaning done\n")
@@ -267,7 +267,7 @@ func clean(mediaid string) {
 func cleanall() {
 	err := os.RemoveAll("media/")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
 	fmt.Printf("cleaning done\n")
@@ -280,7 +280,7 @@ func check(podid string) {
 		fmt.Printf("media doesn't exist, creating dir\n")
 		err = os.Mkdir("media", 0755)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(os.Stderr,"%v\n", err)
 			die(1)
 		}
 	}
@@ -289,7 +289,7 @@ func check(podid string) {
 		fmt.Printf("media/%v doesn't exist, creating dir\n", path.Base(podid))
 		err = os.Mkdir("media/"+path.Base(podid), 0755)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(os.Stderr,"%v\n", err)
 			die(1)
 		}
 	}
@@ -299,7 +299,7 @@ func check(podid string) {
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Println("not enough arguments!")
+		fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 		usage(1)
 	}
 
@@ -308,14 +308,14 @@ func main() {
 		list()
 	case "info":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!")
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
 		inputFile := os.Args[2]
 		podInfo(inputFile)
 	case "fetch":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!")
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
 		for _, podid := range os.Args[2:] {
@@ -329,13 +329,13 @@ func main() {
 		pull()
 	case "clean":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!")
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
 		clean(os.Args[2])
 	case "refresh":
 		if len(os.Args) < 3 {
-			fmt.Println("not enough arguments!")
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
 		for _, podid := range os.Args[2:] {
@@ -346,6 +346,5 @@ func main() {
 	default:
 		usage(1)
 	}
-
 	return
 }
