@@ -64,7 +64,7 @@ available commands are
 }
 
 func fetch(url, fileName string) {
-	fmt.Printf("%-10s %s\n", "fetching", url)
+	fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
 
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -83,7 +83,7 @@ func fetch(url, fileName string) {
 	n, err := io.Copy(output, response.Body)
 	output.Sync()
 
-	fmt.Printf("%-10s %s %v bytes\n", "fetched", url, n)
+	fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
 	return
 }
 
@@ -95,7 +95,7 @@ func list() {
 	}
 
 	for _, file := range files {
-		fmt.Printf("%v\n", file.Name())
+		fmt.Fprintf(os.Stdout, "%v\n", file.Name())
 	}
 	die(0)
 }
@@ -103,7 +103,7 @@ func list() {
 func podInfo(filename string) {
 	xmlFile, err := os.Open(filename)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -118,16 +118,16 @@ func podInfo(filename string) {
 	err = d.Decode(&q)
 	c := q.Podcast
 
-	fmt.Printf("title\t\t%v\n", c.Title)
+	fmt.Fprintf(os.Stdout, "title\t\t%v\n", c.Title)
 
 	for _, feedurl := range c.NewFeedUrl {
 		if feedurl.Rel == "self" {
-			fmt.Printf("url\t\t%v\n", feedurl.Link)
+			fmt.Fprintf(os.Stdout, "url\t\t%v\n", feedurl.Link)
 		}
 	}
-	fmt.Printf("desc\t\t%v\n", c.Desc)
+	fmt.Fprintf(os.Stdout, "desc\t\t%v\n", c.Desc)
 	lastEpisode := c.EpisodeList[0]
-	fmt.Printf("last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
+	fmt.Fprintf(os.Stdout, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
 	die(0)
 	/*
 		for _, episode := range c.EpisodeList {
@@ -139,7 +139,7 @@ func podInfo(filename string) {
 func fetchPodcast(podid string) error {
 	xmlFile, err := os.Open(podid)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -166,24 +166,24 @@ func fetchPodcast(podid string) error {
 
 	err = xmlFile.Sync()
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 	err = xmlFile.Close()
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
 	err = os.Remove(podid)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
 	err = os.Rename("tmp", podid)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -199,7 +199,7 @@ func fetchEpisode(podid string) {
 	check(podid)
 	xmlFile, err := os.Open(podid)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -243,9 +243,10 @@ func pull() {
 		check(file.Name())
 		err = fetchPodcast("rss/" + file.Name())
 		if err != nil {
+			//don't download the episode
 			continue
 		}
-		fmt.Printf("fetching %v\n", file.Name())
+		fmt.Fprintf(os.Stdout, "fetching %v\n", file.Name())
 		fetchEpisode("rss/" + file.Name())
 	}
 	die(0)
@@ -260,7 +261,7 @@ func clean(mediaid string) {
 		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
-	fmt.Printf("cleaning done\n")
+	fmt.Fprintf(os.Stdout, "cleaning done\n")
 	die(0)
 }
 
@@ -270,14 +271,14 @@ func cleanall() {
 		fmt.Fprintf(os.Stderr,"%v\n", err)
 		die(1)
 	}
-	fmt.Printf("cleaning done\n")
+	fmt.Fprintf(os.Stdout, "cleaning done\n")
 	die(0)
 }
 
 func check(podid string) {
 	_, err := os.Stat("media")
 	if os.IsNotExist(err) {
-		fmt.Printf("media doesn't exist, creating dir\n")
+		fmt.Fprintf(os.Stderr, "media doesn't exist, creating dir\n")
 		err = os.Mkdir("media", 0755)
 		if err != nil {
 			fmt.Fprintf(os.Stderr,"%v\n", err)
@@ -286,7 +287,7 @@ func check(podid string) {
 	}
 	_, err = os.Stat("media/" + path.Base(podid))
 	if os.IsNotExist(err) {
-		fmt.Printf("media/%v doesn't exist, creating dir\n", path.Base(podid))
+		fmt.Fprintf(os.Stderr, "media/%v doesn't exist, creating dir\n", path.Base(podid))
 		err = os.Mkdir("media/"+path.Base(podid), 0755)
 		if err != nil {
 			fmt.Fprintf(os.Stderr,"%v\n", err)
