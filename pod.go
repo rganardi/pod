@@ -68,7 +68,7 @@ func fetch(url, fileName string) {
 
 	output, err := os.Create(fileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 	defer output.Close()
@@ -90,7 +90,7 @@ func fetch(url, fileName string) {
 func list() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -197,6 +197,7 @@ func fetchPodcast(podid string) error {
 
 func fetchEpisode(podid string) {
 	check(podid)
+	podname := path.Base(podid)
 	xmlFile, err := os.Open(podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -214,7 +215,6 @@ func fetchEpisode(podid string) {
 	c := q.Podcast
 
 	url := c.EpisodeList[0].Enclosure.Link
-	podname := path.Base(podid)
 	filename := "media/" + podname + "/" + path.Base(url)
 
 	//check if the file to download already exists
@@ -235,7 +235,7 @@ func fetchEpisode(podid string) {
 func pull() {
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 
@@ -252,15 +252,58 @@ func pull() {
 	die(0)
 }
 
-func clean(mediaid string) {
-	if mediaid == "all" {
+func clean(podid string) {
+	if podid == "all" {
 		cleanall()
 	}
-	err := os.Remove(mediaid)
+
+	files, err := ioutil.ReadDir("media/" + path.Base(podid))
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
+
+	xmlFile, err := os.Open(podid)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+	defer xmlFile.Close()
+
+	fd, _ := ioutil.ReadAll(xmlFile)
+
+	q := Query{}
+
+	d := xml.NewDecoder(bytes.NewReader(fd))
+	err = d.Decode(&q)
+	c := q.Podcast
+
+	//find the latest episode
+	var latest string
+	for i := 0; i < len(c.EpisodeList) && latest == ""; i++ {
+		filename := path.Base(c.EpisodeList[i].Enclosure.Link)
+		for _, file := range files {
+			if file.Name() == filename {
+				latest = filename
+				break
+			}
+		}
+	}
+	if latest == "" {
+		fmt.Fprintf(os.Stderr, "latest episode not found, aborting clean\n")
+		die(1)
+	}
+
+	for _, file := range files {
+		if file.Name() != latest {
+			err = os.Remove("media/" + path.Base(podid) + "/" + file.Name())
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				die(1)
+			}
+		}
+	}
+
 	fmt.Fprintf(os.Stdout, "cleaning done\n")
 	die(0)
 }
@@ -268,7 +311,7 @@ func clean(mediaid string) {
 func cleanall() {
 	err := os.RemoveAll("media/")
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
 	fmt.Fprintf(os.Stdout, "cleaning done\n")
@@ -281,7 +324,7 @@ func check(podid string) {
 		fmt.Fprintf(os.Stderr, "media doesn't exist, creating dir\n")
 		err = os.Mkdir("media", 0755)
 		if err != nil {
-			fmt.Fprintf(os.Stderr,"%v\n", err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 			die(1)
 		}
 	}
@@ -290,7 +333,7 @@ func check(podid string) {
 		fmt.Fprintf(os.Stderr, "media/%v doesn't exist, creating dir\n", path.Base(podid))
 		err = os.Mkdir("media/"+path.Base(podid), 0755)
 		if err != nil {
-			fmt.Fprintf(os.Stderr,"%v\n", err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 			die(1)
 		}
 	}
