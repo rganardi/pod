@@ -343,8 +343,7 @@ func check(podid string) {
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-		usage(1)
+		usage(0)
 	}
 
 	switch os.Args[1] {
