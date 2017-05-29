@@ -387,6 +387,7 @@ func main() {
 	case "help":
 		usage(0)
 	default:
+		fmt.Fprintf(os.Stderr, "error: unknown command\n")
 		usage(1)
 	}
 	return
