@@ -75,7 +75,7 @@ func fetch(url, fileName string) {
 
 	response, err := http.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error while downloading%v\n%v\n", url, err)
+		fmt.Fprintf(os.Stderr, "error while downloading %v\n%v\n", url, err)
 		die(1)
 	}
 	defer response.Body.Close()
