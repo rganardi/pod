@@ -255,6 +255,7 @@ func pull() {
 func clean(podid string) {
 	if podid == "all" {
 		cleanall()
+		return
 	}
 
 	files, err := ioutil.ReadDir("media/" + path.Base(podid))
@@ -305,17 +306,22 @@ func clean(podid string) {
 	}
 
 	fmt.Fprintf(os.Stdout, "cleaning done\n")
-	die(0)
+	return
 }
 
 func cleanall() {
-	err := os.RemoveAll("media/")
+	pods, err := ioutil.ReadDir("media/")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		die(1)
 	}
+
+	for _, pod := range pods {
+		clean("rss/" + pod.Name())
+	}
+
 	fmt.Fprintf(os.Stdout, "cleaning done\n")
-	die(0)
+	return
 }
 
 func check(podid string) {
@@ -376,6 +382,7 @@ func main() {
 			die(1)
 		}
 		clean(os.Args[2])
+		die(0)
 	case "refresh":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
