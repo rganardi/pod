@@ -53,7 +53,7 @@ func die(status int) {
 
 func usage(status int) {
 	fmt.Print("pod - small podcast thing\n")
-	fmt.Printf("version %s, %s\n", version_number, build_date)
+	fmt.Printf("build %s, %s\n", version_number, build_date)
 	fmt.Print(`
 	pod command arguments
 
