@@ -122,6 +122,11 @@ func podInfo(filename string) {
 	//err = xml.Unmarshal(file, &q)
 	d := xml.NewDecoder(bytes.NewReader(file))
 	err = d.Decode(&q)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error while decoding %s\n", filename)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
 	c := q.Podcast
 
 	fmt.Fprintf(os.Stdout, "title\t\t%v\n", c.Title)
