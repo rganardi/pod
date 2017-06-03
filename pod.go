@@ -155,6 +155,8 @@ func fetchPodcast(podid string) error {
 		die(1)
 	}
 
+	defer xmlFile.Close()
+
 	file, _ := ioutil.ReadAll(xmlFile)
 
 	q := Query{}
