@@ -348,6 +348,11 @@ func check(podid string) {
 
 func main() {
 
+	err := os.Chdir(os.Getenv("HOME") + "/pod/")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+	}
+
 	if len(os.Args) < 2 {
 		usage(0)
 	}
