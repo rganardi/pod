@@ -125,9 +125,10 @@ func podInfo(filename string) {
 			fmt.Fprintf(os.Stdout, "url\t\t%v\n", feedurl.Link)
 		}
 	}
-	fmt.Fprintf(os.Stdout, "desc\t\t%v\n", c.Desc)
+	//fmt.Fprintf(os.Stdout, "desc\t\t%v\n", c.Desc)
 	lastEpisode := c.EpisodeList[0]
 	fmt.Fprintf(os.Stdout, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
+	fmt.Fprintf(os.Stdout, "desc\t\t%v\n", lastEpisode.Desc)
 	die(0)
 	/*
 		for _, episode := range c.EpisodeList {
