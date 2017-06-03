@@ -38,6 +38,11 @@ type EpisodeUrl struct {
 	Link string `xml:"url,attr"`
 }
 
+//these are defined in the makefile
+var (
+	version_number, build_date string = "unknown", "unknown"
+)
+
 func die(status int) {
 	if status > 0 {
 		os.Exit(1)
@@ -47,8 +52,9 @@ func die(status int) {
 }
 
 func usage(status int) {
-	fmt.Print(`pod - small podcast thing
-
+	fmt.Print("pod - small podcast thing\n")
+	fmt.Printf("version %s, %s\n", version_number, build_date)
+	fmt.Print(`
 	pod command arguments
 
 available commands are
