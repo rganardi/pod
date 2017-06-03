@@ -305,7 +305,7 @@ func clean(podid string) {
 		}
 	}
 
-	fmt.Fprintf(os.Stdout, "cleaning done\n")
+	fmt.Fprintf(os.Stdout, "cleaned %s\n", path.Base(podid))
 	return
 }
 
