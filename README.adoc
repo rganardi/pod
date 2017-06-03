@@ -1,0 +1,14 @@
+== installation
+
+	make install
+
+This will run `go install` with the appropriate build flags. To run just the compiler, run
+
+	make
+
+== usage
+
+	pod help
+
+for usage. The feeds should be put in `~/pod/rss`. Media files will go into `~/pod/media`
+
