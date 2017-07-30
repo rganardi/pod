@@ -379,17 +379,17 @@ func main() {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
-		inputFile := os.Args[2]
-		podInfo(inputFile)
+		podid := os.Args[2]
+		podInfo("rss/"+podid)
 	case "fetch":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
 		for _, podid := range os.Args[2:] {
-			err := fetchPodcast(podid)
+			err := fetchPodcast("rss/"+podid)
 			if err == nil {
-				fetchEpisode(podid)
+				fetchEpisode("rss/"+podid)
 			}
 		}
 		die(0)
@@ -400,7 +400,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
 		}
-		clean(os.Args[2])
+		clean("rss/"+os.Args[2])
 		die(0)
 	case "refresh":
 		if len(os.Args) < 3 {
@@ -408,7 +408,7 @@ func main() {
 			die(1)
 		}
 		for _, podid := range os.Args[2:] {
-			fetchPodcast(podid)
+			fetchPodcast("rss/"+podid)
 		}
 	case "help":
 		usage(0)
