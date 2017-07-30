@@ -267,11 +267,6 @@ func pull() {
 }
 
 func clean(podid string) {
-	if podid == "all" {
-		cleanall()
-		return
-	}
-
 	files, err := ioutil.ReadDir("media/" + path.Base(podid))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -396,6 +391,11 @@ func main() {
 	case "pull":
 		pull()
 	case "clean":
+		if os.Args[2] == "all" {
+			cleanall()
+			die(0)
+		}
+
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
 			die(1)
