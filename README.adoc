@@ -6,6 +6,10 @@ This will run `go install` with the appropriate build flags. To run just the com
 
 	make
 
+To install completion file for zsh, run
+
+	sudo make complete
+
 == usage
 
 	pod help

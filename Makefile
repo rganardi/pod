@@ -7,3 +7,6 @@ pod: pod.go
 
 install:
 	go install ${LDFLAGS}
+
+complete:
+	install -m 644 _pod /usr/share/zsh/site-functions

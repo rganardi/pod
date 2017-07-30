@@ -1,0 +1,45 @@
+#compdef pod
+
+(( $+functions[_pod_command] )) ||
+_pod_command()
+{
+	local -a _pod_cmds
+	_pod_cmds=(
+	"list:list all available podcast"
+	"info:print info about PODCAST"
+	"refresh:refresh PODCAST"
+	"fetch:get the latest episode of PODCAST"
+	"pull:get the latest episode of all podcasts"
+	"clean:remove media files for PODCAST"
+	"help:display usage information"
+	)
+
+	if (( CURRENT == 1 )); then
+		_describe -t commands 'pod command' _pod_cmds || compadd "$@"
+	else
+		local curcontext="$curcontext" expl
+
+		cmd="${${_pod_cmds[(r)$words[1]:*]%%:*}}"
+		
+		if (( $#cmd )); then
+			curcontext="${curcontext%:*:*}:pod_${cmd}:"
+
+			_call_function ret _pod_list || _message 'no more arguments'
+		else
+			_message "unknown pod command; $words[1]"
+		fi
+		return ret
+	fi
+}
+
+(( $+functions[_pod_list] )) ||
+_pod_list () {
+	_files -W $HOME/pod/rss/
+}
+
+_arguments -s \
+				'*::pod command:_pod_command'
+
+
+# vim: tabstop=2
+# vim: shiftwidth=2
