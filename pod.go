@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 )
 
 type Query struct {
@@ -64,6 +66,7 @@ available commands are
 	fetch PODCAST		get the latest episode of PODCAST
 	pull			get the latest episode of all podcasts
 	clean PODCAST		remove media files for PODCAST
+	episode PODCAST		see all episodes of PODCAST
 	help			display this help
 `)
 	die(status)
@@ -148,6 +151,74 @@ func podInfo(filename string) {
 	*/
 }
 
+func podEpisode(filename string) {
+	xmlFile, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+
+	defer xmlFile.Close()
+
+	file, _ := ioutil.ReadAll(xmlFile)
+
+	q := Query{}
+	//q.
+	//err = xml.Unmarshal(file, &q)
+	d := xml.NewDecoder(bytes.NewReader(file))
+	err = d.Decode(&q)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error while decoding %s\n", filename)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+	c := q.Podcast
+
+	env := os.Environ()
+	if err != nil {
+		fmt.Fprint(os.Stderr, "error getting environment variables\n")
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+
+	pager := "/usr/bin/less"
+	for _, variable := range env {
+		if strings.HasPrefix(variable, "PAGER") {
+			pager = strings.TrimPrefix(variable, "PAGER=")
+		}
+	}
+
+	commandToRun := exec.Command(pager)
+	commandToRun.Stdout = os.Stdout
+	pagerStdin, err := commandToRun.StdinPipe()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+
+	err = commandToRun.Start()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+
+	for _, episode := range c.EpisodeList {
+		fmt.Fprintf(pagerStdin, "episode title\t%v\n", episode.Title)
+		fmt.Fprintf(pagerStdin, "date\t\t%v\n", episode.PubDate)
+		fmt.Fprintf(pagerStdin, "desc\t\t%v\n", episode.Desc)
+		fmt.Fprintf(pagerStdin, "\n")
+	}
+
+	pagerStdin.Close()
+
+	err = commandToRun.Wait()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		die(1)
+	}
+
+	die(0)
+}
 func fetchPodcast(podid string) error {
 	xmlFile, err := os.Open(podid)
 	if err != nil {
@@ -410,6 +481,13 @@ func main() {
 		for _, podid := range os.Args[2:] {
 			fetchPodcast("rss/" + podid)
 		}
+	case "episode":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			die(1)
+		}
+		podid := os.Args[2]
+		podEpisode("rss/" + podid)
 	case "help":
 		usage(0)
 	default:

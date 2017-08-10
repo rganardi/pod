@@ -11,6 +11,7 @@ _pod_command()
 	"fetch:get the latest episode of PODCAST"
 	"pull:get the latest episode of all podcasts"
 	"clean:remove media files for PODCAST"
+	"episode:see all episodes of PODCAST"
 	"help:display usage information"
 	)
 
