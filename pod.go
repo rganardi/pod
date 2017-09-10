@@ -43,9 +43,10 @@ type EpisodeUrl struct {
 //these are defined in the makefile
 var (
 	version_number, build_date string = "unknown", "unknown"
+	status int = 0
 )
 
-func die(status int) {
+func die() {
 	if status > 0 {
 		os.Exit(1)
 	} else {
@@ -53,7 +54,8 @@ func die(status int) {
 	}
 }
 
-func usage(status int) {
+func usage() {
+	defer die()
 	fmt.Print("pod - small podcast thing\n")
 	fmt.Printf("build %s, %s\n", version_number, build_date)
 	fmt.Print(`
@@ -69,7 +71,7 @@ available commands are
 	episode PODCAST		see all episodes of PODCAST
 	help			display this help
 `)
-	die(status)
+	return
 }
 
 func fetch(url, fileName string) {
@@ -78,14 +80,16 @@ func fetch(url, fileName string) {
 	output, err := os.Create(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 	defer output.Close()
 
 	response, err := http.Get(url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error while downloading %v\n%v\n", url, err)
-		die(1)
+		status = 1
+		return
 	}
 	defer response.Body.Close()
 
@@ -97,23 +101,29 @@ func fetch(url, fileName string) {
 }
 
 func list() {
+	defer die()
+
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	for _, file := range files {
 		fmt.Fprintf(os.Stdout, "%v\n", file.Name())
 	}
-	die(0)
+	return
 }
 
 func podInfo(filename string) {
+	defer die()
+
 	xmlFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	defer xmlFile.Close()
@@ -128,7 +138,8 @@ func podInfo(filename string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error while decoding %s\n", filename)
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 	c := q.Podcast
 
@@ -143,7 +154,7 @@ func podInfo(filename string) {
 	lastEpisode := c.EpisodeList[0]
 	fmt.Fprintf(os.Stdout, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
 	fmt.Fprintf(os.Stdout, "desc\t\t%v\n", lastEpisode.Desc)
-	die(0)
+	return
 	/*
 		for _, episode := range c.EpisodeList {
 			fmt.Printf("\t%s\n", episode)
@@ -152,10 +163,13 @@ func podInfo(filename string) {
 }
 
 func podEpisode(filename string) {
+	defer die()
+
 	xmlFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	defer xmlFile.Close()
@@ -170,7 +184,8 @@ func podEpisode(filename string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error while decoding %s\n", filename)
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 	c := q.Podcast
 
@@ -178,7 +193,8 @@ func podEpisode(filename string) {
 	if err != nil {
 		fmt.Fprint(os.Stderr, "error getting environment variables\n")
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	pager := "/usr/bin/less"
@@ -193,13 +209,15 @@ func podEpisode(filename string) {
 	pagerStdin, err := commandToRun.StdinPipe()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	err = commandToRun.Start()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	for _, episode := range c.EpisodeList {
@@ -214,16 +232,18 @@ func podEpisode(filename string) {
 	err = commandToRun.Wait()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
-	die(0)
+	return
 }
 func fetchPodcast(podid string) error {
 	xmlFile, err := os.Open(podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return err
 	}
 
 	defer xmlFile.Close()
@@ -246,30 +266,35 @@ func fetchPodcast(podid string) error {
 	}
 	if url == "" {
 		fmt.Fprintf(os.Stderr, "%s no update link found\n", podid)
+		status = 1
 		return fmt.Errorf("%s no update link found\n", podid)
 	}
 
 	err = xmlFile.Sync()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return err
 	}
 	err = xmlFile.Close()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return err
 	}
 
 	err = os.Remove(podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return err
 	}
 
 	err = os.Rename("tmp", podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return err
 	}
 
 	return nil
@@ -286,7 +311,8 @@ func fetchEpisode(podid string) {
 	xmlFile, err := os.Open(podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	defer xmlFile.Close()
@@ -318,10 +344,13 @@ func fetchEpisode(podid string) {
 }
 
 func pull() {
+	defer die()
+
 	files, err := ioutil.ReadDir("rss")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	for _, file := range files {
@@ -334,20 +363,22 @@ func pull() {
 		fmt.Fprintf(os.Stdout, "fetching %v\n", file.Name())
 		fetchEpisode("rss/" + file.Name())
 	}
-	die(0)
+	return
 }
 
 func clean(podid string) {
 	files, err := ioutil.ReadDir("media/" + path.Base(podid))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	xmlFile, err := os.Open(podid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 	defer xmlFile.Close()
 
@@ -372,7 +403,8 @@ func clean(podid string) {
 	}
 	if latest == "" {
 		fmt.Fprintf(os.Stderr, "latest episode not found, aborting clean\n")
-		die(1)
+		status = 1
+		return
 	}
 
 	for _, file := range files {
@@ -380,7 +412,8 @@ func clean(podid string) {
 			err = os.Remove("media/" + path.Base(podid) + "/" + file.Name())
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
-				die(1)
+				status = 1
+				return
 			}
 		}
 	}
@@ -393,7 +426,8 @@ func cleanall() {
 	pods, err := ioutil.ReadDir("media/")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		die(1)
+		status = 1
+		return
 	}
 
 	for _, pod := range pods {
@@ -411,7 +445,8 @@ func check(podid string) {
 		err = os.Mkdir("media", 0755)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
-			die(1)
+			status = 1
+			die()
 		}
 	}
 	_, err = os.Stat("media/" + path.Base(podid))
@@ -420,13 +455,15 @@ func check(podid string) {
 		err = os.Mkdir("media/"+path.Base(podid), 0755)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
-			die(1)
+			status = 1
+			die()
 		}
 	}
 	return
 }
 
 func main() {
+	defer die()
 
 	err := os.Chdir(os.Getenv("HOME") + "/pod/")
 	if err != nil {
@@ -434,7 +471,7 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		usage(0)
+		usage()
 	}
 
 	switch os.Args[1] {
@@ -443,14 +480,16 @@ func main() {
 	case "info":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			die(1)
+			status = 1
+			return
 		}
 		podid := os.Args[2]
 		podInfo("rss/" + podid)
 	case "fetch":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			die(1)
+			status = 1
+			return
 		}
 		for _, podid := range os.Args[2:] {
 			err := fetchPodcast("rss/" + podid)
@@ -458,25 +497,26 @@ func main() {
 				fetchEpisode("rss/" + podid)
 			}
 		}
-		die(0)
+		return
 	case "pull":
 		pull()
 	case "clean":
-		if os.Args[2] == "all" {
-			cleanall()
-			die(0)
-		}
-
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			die(1)
+			status = 1
+			return
+		}
+		if os.Args[2] == "all" {
+			cleanall()
+			return
 		}
 		clean("rss/" + os.Args[2])
-		die(0)
+		return
 	case "refresh":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			die(1)
+			status = 1
+			return
 		}
 		for _, podid := range os.Args[2:] {
 			fetchPodcast("rss/" + podid)
@@ -484,15 +524,17 @@ func main() {
 	case "episode":
 		if len(os.Args) < 3 {
 			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			die(1)
+			status = 1
+			return
 		}
 		podid := os.Args[2]
 		podEpisode("rss/" + podid)
 	case "help":
-		usage(0)
+		usage()
 	default:
 		fmt.Fprintf(os.Stderr, "error: unknown command\n")
-		usage(1)
+		status = 1
+		usage()
 	}
 	return
 }
