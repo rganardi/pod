@@ -419,7 +419,6 @@ func clean(podid string) {
 		}
 	}
 
-	fmt.Fprintf(os.Stdout, "cleaned %s\n", path.Base(podid))
 	return
 }
 
@@ -432,10 +431,10 @@ func cleanall() {
 	}
 
 	for _, pod := range pods {
+		fmt.Fprintf(os.Stdout, "%s %-50s\r", "cleaning", pod.Name())
 		clean("rss/" + pod.Name())
 	}
 
-	fmt.Fprintf(os.Stdout, "cleaning done\n")
 	return
 }
 
