@@ -75,7 +75,7 @@ available commands are
 }
 
 func fetch(url, fileName string) {
-	fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
+	//fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
 
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -93,10 +93,10 @@ func fetch(url, fileName string) {
 	}
 	defer response.Body.Close()
 
-	n, err := io.Copy(output, response.Body)
+	_, err = io.Copy(output, response.Body)
 	output.Sync()
 
-	fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
+	//fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
 	return
 }
 
@@ -331,9 +331,10 @@ func fetchEpisode(podid string) {
 	//check if the file to download already exists
 	_, err = os.Stat(filename)
 	if err == nil {
-		fmt.Fprintf(os.Stdout, "media already downloaded\n")
+		//fmt.Fprintf(os.Stdout, "media already downloaded\n")
 		return
 	}
+	fmt.Fprintf(os.Stdout, "%s %-20s %s %-20s\r", "fetching", podname, "eps", c.EpisodeList[0].Title)
 	fetch(url, filename)
 	return
 	/*
@@ -355,12 +356,12 @@ func pull() {
 
 	for _, file := range files {
 		check(file.Name())
+		fmt.Fprintf(os.Stdout, "%s %-50s\r", "fetching", file.Name())
 		err = fetchPodcast("rss/" + file.Name())
 		if err != nil {
 			//don't download the episode
 			continue
 		}
-		fmt.Fprintf(os.Stdout, "fetching %v\n", file.Name())
 		fetchEpisode("rss/" + file.Name())
 	}
 	return
