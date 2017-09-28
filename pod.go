@@ -336,7 +336,7 @@ func fetchEpisode(podid string) {
 	}
 	fmt.Fprintf(os.Stdout, "%s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
 	fetch(url, filename)
-	fmt.Fprintf(os.Stdout, "%-9s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(os.Stdout, "%-8s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
 	return
 	/*
 		for _, episode := range c.EpisodeList {
