@@ -10,7 +10,12 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 type Query struct {
@@ -43,7 +48,7 @@ type EpisodeUrl struct {
 //these are defined in the makefile
 var (
 	version_number, build_date string = "unknown", "unknown"
-	status int = 0
+	status                     int    = 0
 )
 
 func die() {
@@ -93,8 +98,34 @@ func fetch(url, fileName string) {
 	}
 	defer response.Body.Close()
 
-	_, err = io.Copy(output, response.Body)
-	output.Sync()
+	filesize, _ := strconv.Atoi(response.Header.Get("Content-Length"))
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, err = io.Copy(output, response.Body)
+		output.Sync()
+	}()
+
+	go func() {
+		var cursize int64 = 0
+		for {
+			stat, err := output.Stat()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+			dlspeed := stat.Size() - cursize
+			if int(stat.Size()) < filesize {
+				fmt.Fprintf(os.Stdout, "(%2v%% %6v/s) %6v\r", (int(stat.Size()) * 100 / filesize), humanize.Bytes(uint64(dlspeed)), humanize.Bytes(uint64(filesize)))
+			} else {
+				break
+			}
+			cursize = stat.Size()
+			time.Sleep(time.Second)
+		}
+	}()
+	wg.Wait()
 
 	//fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
 	return
@@ -334,9 +365,9 @@ func fetchEpisode(podid string) {
 		//fmt.Fprintf(os.Stdout, "media already downloaded\n")
 		return
 	}
-	fmt.Fprintf(os.Stdout, "%s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(os.Stdout, "%-30s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
 	fetch(url, filename)
-	fmt.Fprintf(os.Stdout, "%-8s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(os.Stdout, "%-30s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
 	return
 	/*
 		for _, episode := range c.EpisodeList {
@@ -357,7 +388,7 @@ func pull() {
 
 	for _, file := range files {
 		check(file.Name())
-		fmt.Fprintf(os.Stdout, "%s %-50s\r", "fetching", file.Name())
+		fmt.Fprintf(os.Stdout, "%-30s %-50s\r", "fetching", file.Name())
 		err = fetchPodcast("rss/" + file.Name())
 		if err != nil {
 			//don't download the episode
