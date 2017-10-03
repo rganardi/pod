@@ -108,23 +108,22 @@ func fetch(url, fileName string) {
 		output.Sync()
 	}()
 
-	go func() {
-		var cursize int64 = 0
-		for {
-			stat, err := output.Stat()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-			}
-			dlspeed := stat.Size() - cursize
-			if int(stat.Size()) < filesize {
-				fmt.Fprintf(os.Stdout, "(%2v%% %6v/s) %6v\r", (int(stat.Size()) * 100 / filesize), humanize.Bytes(uint64(dlspeed)), humanize.Bytes(uint64(filesize)))
-			} else {
-				break
-			}
-			cursize = stat.Size()
-			time.Sleep(time.Second)
+	var cursize int64 = 0
+	for {
+		stat, err := output.Stat()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 		}
-	}()
+		dlspeed := stat.Size() - cursize
+		if int(stat.Size()) < filesize {
+			fmt.Fprintf(os.Stdout, "(%2v%% %6v/s) %6v\r", (int(stat.Size()) * 100 / filesize), humanize.Bytes(uint64(dlspeed)), humanize.Bytes(uint64(filesize)))
+		} else {
+			break
+		}
+		cursize = stat.Size()
+		time.Sleep(time.Second)
+	}
+
 	wg.Wait()
 
 	//fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
