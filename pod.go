@@ -15,6 +15,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/crypto/ssh/terminal"
+
 	humanize "github.com/dustin/go-humanize"
 )
 
@@ -49,6 +51,8 @@ type EpisodeUrl struct {
 var (
 	version_number, build_date string = "unknown", "unknown"
 	status                     int    = 0
+	msg                        io.Writer
+	log                        io.Writer
 )
 
 func die() {
@@ -80,7 +84,7 @@ available commands are
 }
 
 func fetch(url, fileName string) {
-	//fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
+	//fmt.Fprintf(log, "%-10s %s\n", "fetching", url)
 
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -116,7 +120,7 @@ func fetch(url, fileName string) {
 		}
 		dlspeed := stat.Size() - cursize
 		if int(stat.Size()) < filesize {
-			fmt.Fprintf(os.Stdout, "(%2v%% %6v/s) %6v\r", (int(stat.Size()) * 100 / filesize), humanize.Bytes(uint64(dlspeed)), humanize.Bytes(uint64(filesize)))
+			fmt.Fprintf(msg, "(%2v%% %6v/s) %6v\r", (int(stat.Size()) * 100 / filesize), humanize.Bytes(uint64(dlspeed)), humanize.Bytes(uint64(filesize)))
 		} else {
 			break
 		}
@@ -126,7 +130,7 @@ func fetch(url, fileName string) {
 
 	wg.Wait()
 
-	//fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
+	//fmt.Fprintf(log, "%-10s %s %v bytes\n", "fetched", url, n)
 	return
 }
 
@@ -141,7 +145,7 @@ func list() {
 	}
 
 	for _, file := range files {
-		fmt.Fprintf(os.Stdout, "%v\n", file.Name())
+		fmt.Fprintf(log, "%v\n", file.Name())
 	}
 	return
 }
@@ -173,17 +177,17 @@ func podInfo(filename string) {
 	}
 	c := q.Podcast
 
-	fmt.Fprintf(os.Stdout, "title\t\t%v\n", c.Title)
+	fmt.Fprintf(log, "title\t\t%v\n", c.Title)
 
 	for _, feedurl := range c.NewFeedUrl {
 		if feedurl.Rel == "self" {
-			fmt.Fprintf(os.Stdout, "url\t\t%v\n", feedurl.Link)
+			fmt.Fprintf(log, "url\t\t%v\n", feedurl.Link)
 		}
 	}
-	//fmt.Fprintf(os.Stdout, "desc\t\t%v\n", c.Desc)
+	//fmt.Fprintf(log, "desc\t\t%v\n", c.Desc)
 	lastEpisode := c.EpisodeList[0]
-	fmt.Fprintf(os.Stdout, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
-	fmt.Fprintf(os.Stdout, "desc\t\t%v\n", lastEpisode.Desc)
+	fmt.Fprintf(log, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
+	fmt.Fprintf(log, "desc\t\t%v\n", lastEpisode.Desc)
 	return
 	/*
 		for _, episode := range c.EpisodeList {
@@ -235,7 +239,7 @@ func podEpisode(filename string) {
 	}
 
 	commandToRun := exec.Command(pager)
-	commandToRun.Stdout = os.Stdout
+	commandToRun.Stdout = log
 	pagerStdin, err := commandToRun.StdinPipe()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -361,12 +365,12 @@ func fetchEpisode(podid string) {
 	//check if the file to download already exists
 	_, err = os.Stat(filename)
 	if err == nil {
-		//fmt.Fprintf(os.Stdout, "media already downloaded\n")
+		//fmt.Fprintf(log, "media already downloaded\n")
 		return
 	}
-	fmt.Fprintf(os.Stdout, "%-30s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(msg, "%-30s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
 	fetch(url, filename)
-	fmt.Fprintf(os.Stdout, "%-30s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(log, "%-30s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
 	return
 	/*
 		for _, episode := range c.EpisodeList {
@@ -387,7 +391,7 @@ func pull() {
 
 	for _, file := range files {
 		check(file.Name())
-		fmt.Fprintf(os.Stdout, "%-30s %-50s\r", "fetching", file.Name())
+		fmt.Fprintf(msg, "%-30s %-50s\r", "fetching", file.Name())
 		err = fetchPodcast("rss/" + file.Name())
 		if err != nil {
 			//don't download the episode
@@ -462,7 +466,7 @@ func cleanall() {
 	}
 
 	for _, pod := range pods {
-		fmt.Fprintf(os.Stdout, "%s %-50s\r", "cleaning", pod.Name())
+		fmt.Fprintf(msg, "%s %-50s\r", "cleaning", pod.Name())
 		clean("rss/" + pod.Name())
 	}
 
@@ -499,6 +503,17 @@ func main() {
 	err := os.Chdir(os.Getenv("HOME") + "/pod/")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
+	}
+
+	if terminal.IsTerminal(int(os.Stdout.Fd())) {
+		msg = os.Stdout
+		log = os.Stdout
+	} else {
+		msg, err = os.Open("/dev/null")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+		log = os.Stdout
 	}
 
 	if len(os.Args) < 2 {
