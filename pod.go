@@ -74,7 +74,7 @@ available commands are
 	list			list all available podcast
 	info PODCAST		print info about PODCAST
 	refresh PODCAST		refresh the PODCAST
-	fetch PODCAST		get the latest episode of PODCAST
+	fetch PODCAST EPSID	get episode EPSID of PODCAST
 	pull			get the latest episode of all podcasts
 	clean PODCAST		remove media files for PODCAST
 	episode PODCAST		see all episodes of PODCAST
@@ -254,7 +254,8 @@ func podEpisode(filename string) {
 		return
 	}
 
-	for _, episode := range c.EpisodeList {
+	for epsid, episode := range c.EpisodeList {
+		fmt.Fprintf(pagerStdin, "id\t\t%v\n", epsid)
 		fmt.Fprintf(pagerStdin, "episode title\t%v\n", episode.Title)
 		fmt.Fprintf(pagerStdin, "date\t\t%v\n", episode.PubDate)
 		fmt.Fprintf(pagerStdin, "desc\t\t%v\n", episode.Desc)
@@ -339,7 +340,7 @@ func fetchPodcast(podid string) error {
 	*/
 }
 
-func fetchEpisode(podid string) {
+func fetchEpisode(podid string, epsid int) {
 	check(podid)
 	podname := path.Base(podid)
 	xmlFile, err := os.Open(podid)
@@ -359,7 +360,7 @@ func fetchEpisode(podid string) {
 	err = d.Decode(&q)
 	c := q.Podcast
 
-	url := c.EpisodeList[0].Enclosure.Link
+	url := c.EpisodeList[epsid].Enclosure.Link
 	filename := "media/" + podname + "/" + path.Base(url)
 
 	//check if the file to download already exists
@@ -368,9 +369,9 @@ func fetchEpisode(podid string) {
 		//fmt.Fprintf(log, "media already downloaded\n")
 		return
 	}
-	fmt.Fprintf(msg, "%-30s %-30s %-20s\r", "fetching", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(msg, "%-30s %-30s %-20s\r", "fetching", c.EpisodeList[epsid].Title, podname)
 	fetch(url, filename)
-	fmt.Fprintf(log, "%-30s %-30s %-20s\n", "new", c.EpisodeList[0].Title, podname)
+	fmt.Fprintf(log, "%-30s %-30s %-20s\n", "new", c.EpisodeList[epsid].Title, podname)
 	return
 	/*
 		for _, episode := range c.EpisodeList {
@@ -397,7 +398,7 @@ func pull() {
 			//don't download the episode
 			continue
 		}
-		fetchEpisode("rss/" + file.Name())
+		fetchEpisode("rss/"+file.Name(), 0)
 	}
 	return
 }
@@ -537,11 +538,21 @@ func main() {
 			status = 1
 			return
 		}
-		for _, podid := range os.Args[2:] {
-			err := fetchPodcast("rss/" + podid)
-			if err == nil {
-				fetchEpisode("rss/" + podid)
+		podid := os.Args[2]
+		var epsid int
+		if len(os.Args) < 4 {
+			epsid = 0
+		} else {
+			epsid, err = strconv.Atoi(os.Args[3])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				status = 1
+				return
 			}
+		}
+		err = fetchPodcast("rss/" + podid)
+		if err == nil {
+			fetchEpisode("rss/"+podid, epsid)
 		}
 		return
 	case "pull":
