@@ -2,3 +2,7 @@ language: go
 
 go:
         - 1.x
+
+before_install:
+        go get github.com/dustin/go-humanize
+        go get golang.org/x/crypto/ssh/terminal
