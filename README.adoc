@@ -10,9 +10,15 @@ To install completion file for zsh, run
 
 	sudo make complete
 
+== dependencies
+
+        github.com/dustin/go-humanize
+        golang.org/x/crypto/ssh/terminal
+
+Neither are really important. They're just there for prettyfication of messages.
+
 == usage
 
 	pod help
 
 for usage. The feeds should be put in `~/pod/rss`. Media files will go into `~/pod/media`
-
