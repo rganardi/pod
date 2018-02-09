@@ -1,3 +1,5 @@
+image:https://travis-ci.org/rganardi/pod.svg?branch=master["travis", link="https://travis-ci.org/rganardi/pod"]
+
 == installation
 
 	make install
