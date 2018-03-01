@@ -1,0 +1,69 @@
+.TH POD 1 pod\-VERSION
+.SH NAME
+pod \- small podcast thing
+.SH DESCRIPTION
+.B pod
+is a minimalistic podcast manager.
+It uses directory tree to manage your podcast in a transparent and comprehensible way.
+Each podcast has one rss file and a media folder.
+
+There is a corresponding zsh completion script for use with tab completion of podcast names.
+.SH SYNOPSIS
+.B pod
+.R <command>
+.R arguments
+.SH COMMANDS
+.TP
+.BI list
+List all available podcast.
+.TP
+.BR info " <podcast>"
+Print info about podcast.
+.TP
+.BR refresh " <podcast>"
+Refresh the podcast.
+.TP
+.BR fetch " <podcast> [epsid]"
+Get episode epsid of podcast.
+If epsid is not specified, then the latest episode will be fetched.
+.TP
+.B pull
+Get the latest episode of all podcasts.
+.TP
+.BR clean " <podcast>"
+Remove media files but the latest one for podcast.
+.TP
+.BR episode " <podcast>"
+See all episodes of podcast.
+.TP
+.B help
+Display this help.
+.SH EXAMPLES
+.TP
+pod pull
+Refresh all podcast then fetch the latest episode.
+.TP
+pod clean all
+Clean media files for all podcasts except the latest ones.
+.TP
+pod info radiolab
+Shows information about the podcast and the last episode.
+.SH DIRECTORIES
+.TP
+.B ~/pod/rss
+All the rss feeds are stored in this directory, each podcast in a separate file.
+For example if I want to subscribe to radiolab, put the rss feed in
+.I ~/pod/rss/radiolab
+.TP
+.B ~/pod/media
+All the media files are stored in this directory, each podcast gets a subdirectory.
+For example, all the media from radiolab is stored in
+.I ~/pod/media/radiolab
+.SH MISC
+For automation, use a cron job.
+.SH CONFIGURATION
+None.
+.SH AUTHOR
+Ray Ganardi <rayganardi@gmail.com>
+.SH BUGS
+NPR podcasts are not supported due to their malformed rss.
