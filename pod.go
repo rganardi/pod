@@ -165,8 +165,6 @@ func podInfo(filename string) {
 	file, _ := ioutil.ReadAll(xmlFile)
 
 	q := Query{}
-	//q.
-	//err = xml.Unmarshal(file, &q)
 	d := xml.NewDecoder(bytes.NewReader(file))
 	err = d.Decode(&q)
 	if err != nil {
@@ -184,16 +182,10 @@ func podInfo(filename string) {
 			fmt.Fprintf(log, "url\t\t%v\n", feedurl.Link)
 		}
 	}
-	//fmt.Fprintf(log, "desc\t\t%v\n", c.Desc)
 	lastEpisode := c.EpisodeList[0]
 	fmt.Fprintf(log, "last episode\t%v\n\t\t%v\n", lastEpisode.PubDate, lastEpisode.Title)
 	fmt.Fprintf(log, "desc\t\t%v\n", lastEpisode.Desc)
 	return
-	/*
-		for _, episode := range c.EpisodeList {
-			fmt.Printf("\t%s\n", episode)
-		}
-	*/
 }
 
 func podEpisode(filename string) {
@@ -211,8 +203,6 @@ func podEpisode(filename string) {
 	file, _ := ioutil.ReadAll(xmlFile)
 
 	q := Query{}
-	//q.
-	//err = xml.Unmarshal(file, &q)
 	d := xml.NewDecoder(bytes.NewReader(file))
 	err = d.Decode(&q)
 	if err != nil {
@@ -333,11 +323,6 @@ func fetchPodcast(podid string) error {
 	}
 
 	return nil
-	/*
-		for _, episode := range c.EpisodeList {
-			fmt.Printf("\t%s\n", episode)
-		}
-	*/
 }
 
 func fetchEpisode(podid string, epsid int) {
@@ -373,11 +358,6 @@ func fetchEpisode(podid string, epsid int) {
 	fetch(url, filename)
 	fmt.Fprintf(log, "%-30s %-30s %-20s\n", "new", c.EpisodeList[epsid].Title, podname)
 	return
-	/*
-		for _, episode := range c.EpisodeList {
-			fmt.Printf("\t%s\n", episode)
-		}
-	*/
 }
 
 func pull() {
