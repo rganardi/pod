@@ -351,7 +351,7 @@ func fetchEpisode(podid string, epsid int) {
 		//fmt.Fprintf(log, "media already downloaded\n")
 		return
 	}
-	fmt.Fprintf(msg, "%-20s %-30s %-30s\r", podname, c.EpisodeList[epsid].Title, "fetching")
+	fmt.Fprintf(msg, "%-20s %-30s %-30s\n", podname, c.EpisodeList[epsid].Title, "fetching")
 	fetch(url, filename)
 	fmt.Fprintf(log, "%-20s %-30s\n", podname, c.EpisodeList[epsid].Title)
 	return
